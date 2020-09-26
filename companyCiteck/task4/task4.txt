@@ -1,0 +1,58 @@
+1. Стандарта SQL: MySQL.
+
+2. Скрипты генерации таблиц и заполнения данных:
+
+CREATE TABLE `test` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `number` int(11) NOT NULL,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `test` (`id`, `number`) VALUES
+(1, 1),
+(2, 2),
+(3, 4),
+(4, 7),
+(5, 8),
+(6, 11);
+
+3. Скрипты, решающие задачу:
+
+DROP FUNCTION IF EXISTS GetNextNumber;
+DROP FUNCTION IF EXISTS GetBetweenNumbersCount;
+
+DELIMITER //
+
+CREATE FUNCTION GetNextNumber(NumberID int) RETURNS int
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE result INT;
+    SET result = IF(GetBetweenNumbersCount(NumberID) = 0,0, (SELECT number FROM `test` WHERE id = NumberID-1 ) + 1 );
+    RETURN (result); 
+END//
+
+CREATE FUNCTION GetBetweenNumbersCount(NumberID int) RETURNS int
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE result INT;
+    SET result = (SELECT number FROM `test` WHERE id = (NumberID)) -
+    (SELECT number FROM `test` WHERE id = (NumberID-1) ) - 1;
+    RETURN (result); 
+END//
+
+SELECT    
+    (GetNextNumber(id)) AS NextNumber, 
+    (GetBetweenNumbersCount(id)) AS BetweenCount
+    FROM `test` 
+    WHERE GetBetweenNumbersCount(id) != 0;
+
+Результат работы программы
+NextNumber    BetweenCount
+3                     1
+5                     2
+9                     2
+
+
+
